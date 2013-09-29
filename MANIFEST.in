@@ -1,0 +1,7 @@
+include COPYING
+include LICENSE
+include README.rst
+include requirements.txt
+include setup.py
+include livinglots_lots/*.py
+recursive-include livinglots_lots *.html
