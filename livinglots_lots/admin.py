@@ -5,10 +5,10 @@ from django.contrib.gis.admin import OSMGeoAdmin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 
-from livinglots import get_parcel_model
+from livinglots import get_lot_model, get_lotgroup_model, get_parcel_model
 
 from .admin_views import AddToGroupView
-from .models import Lot, LotGroup, Use
+from .models import Use
 
 
 class LotAdminForm(forms.ModelForm):
@@ -47,7 +47,7 @@ class LotAdminForm(forms.ModelForm):
         return lot
 
     class Meta:
-        model = Lot
+        model = get_lot_model()
 
 
 class LotAdmin(OSMGeoAdmin):
@@ -104,7 +104,7 @@ class LotAdmin(OSMGeoAdmin):
 
 
 class LotInlineAdmin(admin.TabularInline):
-    model = Lot
+    model = get_lot_model()
 
     extra = 0
     fields = ('address_line1', 'name',)
@@ -121,6 +121,6 @@ class UseAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',),}
 
 
-admin.site.register(Lot, LotAdmin)
-admin.site.register(LotGroup, LotGroupAdmin)
+admin.site.register(get_lot_model(), LotAdmin)
+admin.site.register(get_lotgroup_model(), LotGroupAdmin)
 admin.site.register(Use, UseAdmin)
