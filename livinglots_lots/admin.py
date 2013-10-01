@@ -1,69 +1,26 @@
-from django import forms
 from django.conf.urls.defaults import patterns, url
 from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 
-from livinglots import get_lot_model, get_lotgroup_model, get_parcel_model
+from livinglots import get_lot_model, get_lotgroup_model
 
 from .admin_views import AddToGroupView
 from .models import Use
 
 
-class LotAdminForm(forms.ModelForm):
-
-    parcel_pk = forms.IntegerField(
-        required=False,
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(LotAdminForm, self).__init__(*args, **kwargs)
-
-        # Set parcel_pk if Lot has parcel
-        try:
-            self.fields['parcel_pk'].initial = self.instance.parcel.pk
-        except Exception:
-            pass
-
-    def save(self, *args, **kwargs):
-        lot = super(LotAdminForm, self).save(*args, **kwargs)
-
-        # Give lot the parcel with parcel_pk
-        try:
-            parcel_pk = self.cleaned_data['parcel_pk']
-            lot.parcel = get_parcel_model().objects.get(pk=parcel_pk)
-
-            polygon_tied_to_parcel = self.cleaned_data['polygon_tied_to_parcel']
-            if polygon_tied_to_parcel:
-                lot.centroid = lot.parcel.geometry.centroid
-                lot.polygon = lot.parcel.geometry
-        except Exception:
-            # It's okay to have lots without parcels sometimes (eg, with
-            # LotGroup instances).
-            pass
-
-        lot.save()
-        return lot
-
-    class Meta:
-        model = get_lot_model()
-
-
 class LotAdmin(OSMGeoAdmin):
     actions = ('add_to_group',)
-    exclude = ('parcel',)
-    form = LotAdminForm
-    list_display = ('address_line1', 'city', 'name', 'owner_link', 'known_use',
-                    'billing_account',)
+    list_display = ('address_line1', 'city', 'name', 'known_use',)
     list_filter = ('known_use',)
-    readonly_fields = ('added', 'owner_link', 'parcel_link',)
+    readonly_fields = ('added',)
     search_fields = ('address_line1', 'name',)
 
     fieldsets = (
         (None, {
             'fields': ('name', 'address_line1', 'address_line2', 'city',
-                       'state_province', 'postal_code', 'group', 'added',),
+                       'state_province', 'postal_code', 'added', 'group',),
         }),
         ('Known use', {
             'fields': ('known_use', 'known_use_certainty',
@@ -74,9 +31,7 @@ class LotAdmin(OSMGeoAdmin):
         }),
         ('Other data', {
             'classes': ('collapse',),
-            'fields': ('owner_link', 'parcel_pk', 'parcel_link',
-                       'land_use_area', 'polygon_area', 'polygon_width',
-                       'polygon_tied_to_parcel',),
+            'fields': ('polygon_area', 'polygon_width',),
         }),
         ('Geography', {
             'classes': ('collapse',),
