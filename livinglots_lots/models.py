@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from inplace.models import Place, PlaceManager
-from livinglots import get_lot_model, get_owner_model, get_parcel_model
+from livinglots import get_lot_model, get_owner_model
 
 
 class LotManager(PlaceManager):
@@ -185,20 +185,6 @@ class BaseLot(Place):
     def get_geojson_url(self):
         """Override inplace url"""
         return ('lots:lot_detail_geojson', (), { 'pk': self.pk })
-
-
-try:
-    get_lot_model().add_to_class('parcel', models.ForeignKey(
-        get_parcel_model(),
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-        help_text=_('The parcel this lot is based on.'),
-        verbose_name=_('parcel'),
-    ))
-except Exception:
-    # Can't find parcel model, don't add it to the lot model
-    pass
 
 
 class BaseLotGroup(BaseLot):
