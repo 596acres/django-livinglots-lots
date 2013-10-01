@@ -3,4 +3,4 @@ django-braces==1.0.0
 git+git://github.com/ebrelsford/django-chosen/@28b2358d99f
 git+git://github.com/ebrelsford/django-inplace/@1e7eb79fa18
 git+git://github.com/596acres/django-livinglots/@412a5d23606
-git+git://github.com/596acres/django-livinglots-genericviews/@572990a38
+git+git://github.com/596acres/django-livinglots-genericviews/@f04d301
