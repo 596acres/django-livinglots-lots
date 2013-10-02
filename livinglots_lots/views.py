@@ -29,7 +29,7 @@ class FilteredLotsMixin(object):
 
     def get_lots(self):
         # Give the user a different set of lots based on their permissions
-        return get_lot_model().get_filter()(self.request,
+        return get_lot_model().get_filter()(self.request.GET,
                                             user=self.request.user)
 
 
