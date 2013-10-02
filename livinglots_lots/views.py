@@ -14,7 +14,10 @@ from django.views.generic.edit import FormMixin
 from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
+from livinglots import get_lot_model
 from livinglots_genericviews import CSVView, JSONResponseView
+
+from .models import Use
 
 
 #
@@ -40,9 +43,9 @@ class LotContextMixin(ContextMixin):
         """Get the lot referred to by the incoming request"""
         try:
             if self.request.user.has_perm('lots.view_all_lots'):
-                return Lot.objects.get(pk=self.kwargs['pk'])
-            return Lot.visible.get(pk=self.kwargs['pk'])
-        except Lot.DoesNotExist:
+                return get_lot_model().objects.get(pk=self.kwargs['pk'])
+            return get_lot_model().visible.get(pk=self.kwargs['pk'])
+        except get_lot_model().DoesNotExist:
             raise Http404
 
     def get_context_data(self, **kwargs):
@@ -65,7 +68,7 @@ class LotAddGenericMixin(FormMixin):
         except KeyError:
             raise Http404
         initial.update({
-            'content_type': ContentType.objects.get_for_model(Lot),
+            'content_type': ContentType.objects.get_for_model(get_lot_model()),
             'object_id': object_id,
         })
         return initial
@@ -272,7 +275,7 @@ class LotsMap(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(LotsMap, self).get_context_data(**kwargs)
         context.update({
-            'filters': FiltersForm(),
+            #'filters': FiltersForm(),
             'uses': Use.objects.all().order_by('name'),
         })
         return context
@@ -283,7 +286,7 @@ class LotsMap(TemplateView):
 #
 
 class LotDetailView(PlacesDetailView):
-    model = Lot
+    model = get_lot_model()
 
     def get_object(self):
         lot = super(LotDetailView, self).get_object()
@@ -302,9 +305,8 @@ class LotDetailView(PlacesDetailView):
 
 
 class LotGeoJSONDetailView(LotGeoJSONMixin, GeoJSONListView):
-    model = Lot
+    model = get_lot_model()
 
     def get_queryset(self):
         lot = get_object_or_404(self.model, pk=self.kwargs['pk'])
         return self.model.objects.find_nearby(lot, include_self=True, miles=.1)
-
