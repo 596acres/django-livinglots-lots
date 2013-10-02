@@ -256,7 +256,7 @@ class LotsCountBoundaryView(JSONResponseView):
 
 
 class LotsMap(TemplateView):
-    template_name = 'lots/map.html'
+    template_name = 'livinglots/lots/map.html'
 
     def get_context_data(self, **kwargs):
         context = super(LotsMap, self).get_context_data(**kwargs)
