@@ -29,12 +29,8 @@ class FilteredLotsMixin(object):
 
     def get_lots(self):
         # Give the user a different set of lots based on their permissions
-        if self.request.user.has_perm('lots.view_all_lots'):
-            resource = LotResource()
-        else:
-            resource = VisibleLotResource()
-        orm_filters = resource.build_filters(filters=self.request.GET)
-        return resource.apply_filters(self.request, orm_filters)
+        return get_lot_model().get_filter()(self.request,
+                                            user=self.request.user)
 
 
 class LotContextMixin(ContextMixin):
@@ -239,23 +235,13 @@ class LotsCountBoundaryView(JSONResponseView):
     def get_context_data(self, **kwargs):
         return self.get_counts()
 
-    def get_lot_resource(self):
-        if self.request.user.has_perm('lots.view_all_lots'):
-            return LotResource()
-        return VisibleLotResource()
+    def get_filters(self):
+        return get_lot_model().get_filter()(self.request.GET,
+                                            user=self.request.user)
 
     def get_counts(self):
         boundary_layer = self.request.GET.get('choropleth_boundary_layer', '')
-        lot_resource = self.get_lot_resource()
-        filters = lot_resource.build_filters(filters=self.request.GET)
-
-        try:
-            # Ignore bbox
-            del filters['centroid__within']
-        except Exception:
-            pass
-
-        lots = lot_resource.apply_filters(self.request, filters)
+        lots = self.get_filters()
 
         boundaries = Boundary.objects.filter(
             layer__name=boundary_layer,
@@ -275,7 +261,8 @@ class LotsMap(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(LotsMap, self).get_context_data(**kwargs)
         context.update({
-            #'filters': FiltersForm(),
+            'filters': get_lot_model().get_filter()(self.request.GET,
+                                                    user=self.request.user),
             'uses': Use.objects.all().order_by('name'),
         })
         return context

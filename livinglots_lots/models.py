@@ -186,6 +186,14 @@ class BaseLot(Place):
         """Override inplace url"""
         return ('lots:lot_detail_geojson', (), { 'pk': self.pk })
 
+    @classmethod
+    def get_filter(cls):
+        """
+        Get a filter class that follows the same conventions as the filter
+        classes created with django-filter.
+        """
+        raise NotImplementedError('Implement BaseLot.get_filter')
+
 
 class BaseLotGroup(BaseLot):
     """A group of lots."""
