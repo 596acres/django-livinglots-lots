@@ -79,6 +79,11 @@ class BaseLot(Place):
         help_text=('When this lot was added'),
     )
 
+    added_reason = models.CharField(_('reason added'),
+        max_length=256,
+        help_text=('The original reason this lot was added'),
+    )
+
     steward_inclusion_opt_in = models.BooleanField(_('steward inclusion opt-in'),
         default=False,
         help_text=_('Did the steward opt in to being included on our map?'),
