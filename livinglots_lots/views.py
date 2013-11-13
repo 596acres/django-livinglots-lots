@@ -221,8 +221,8 @@ class LotsCountView(FilteredLotsMixin, JSONResponseView):
         lots = self.get_lots()
         context = {
             'lots-count': lots.count(),
-            'no-known-use-count': lots.filter(known_use__isnull=True).count(),
-            'in-use-count': lots.filter(
+            'no-known-use-count': lots.qs.filter(known_use__isnull=True).count(),
+            'in-use-count': lots.qs.filter(
                 known_use__isnull=False,
                 known_use__visible=True,
             ).count(),
