@@ -200,7 +200,7 @@ class BaseLot(Place):
         raise NotImplementedError('Implement BaseLot.get_filter')
 
 
-class BaseLotGroup(BaseLot):
+class BaseLotGroup(models.Model):
     """A group of lots."""
 
     def add(self, lot):
@@ -241,7 +241,14 @@ class BaseLotGroup(BaseLot):
         self.save()
 
     def __unicode__(self):
-        return self.name
+        return self.name or self.address_line1 or '%s' % self.pk
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('lots:lotgroup_detail', (), { 'pk': self.pk, })
+
+    class Meta:
+        abstract = True
 
 
 class Use(models.Model):
