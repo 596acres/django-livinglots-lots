@@ -224,6 +224,10 @@ class BaseLotGroup(models.Model):
         if not lots:
             lots = self.lot_set.all()
 
+        # Update lot_set
+        self.lot_set.clear()
+        self.lot_set.add(*lots)
+
         # Update polygon
         self.polygon = None
         for lot in lots:
@@ -242,10 +246,6 @@ class BaseLotGroup(models.Model):
 
     def __unicode__(self):
         return self.name or self.address_line1 or '%s' % self.pk
-
-    @models.permalink
-    def get_absolute_url(self):
-        return ('lots:lotgroup_detail', (), { 'pk': self.pk, })
 
     class Meta:
         abstract = True
