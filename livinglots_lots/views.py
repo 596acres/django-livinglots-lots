@@ -18,6 +18,7 @@ from livinglots import get_lot_model
 from livinglots_genericviews import CSVView, JSONResponseView
 
 from .models import Use
+from .signals import lot_details_loaded
 
 
 #
@@ -284,6 +285,7 @@ class LotDetailView(PlacesDetailView):
     def get(self, request, *args, **kwargs):
         # Redirect to the lot's group, if it has one
         self.object = self.get_object()
+        lot_details_loaded.send(sender=self, instance=self.object)
         if self.object.group:
             messages.info(request, _("The lot you requested is part of a "
                                      "group. Here is the group's page."))
