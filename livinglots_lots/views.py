@@ -135,24 +135,31 @@ class LotGeoJSONMixin(object):
 # Export views
 #
 
-class LotsCSV(LotFieldsMixin, FilteredLotsMixin, CSVView):
-    fields = ('address_line1', 'city', 'state_province', 'postal_code',
-              'latitude', 'longitude', 'known_use', 'owner', 'owner_type',)
+
+class ExportMixin(object):
+
+    def get_sitename(self):
+        return ''
 
     def get_filename(self):
-        return 'Grounded lots %s' % date.today().strftime('%Y-%m-%d')
+        return '%s lots %s' % (
+            self.get_sitename(),
+            date.today().strftime('%Y-%m-%d'),
+        )
+
+
+class LotsCSV(ExportMixin, LotFieldsMixin, FilteredLotsMixin, CSVView):
+    fields = ('address_line1', 'city', 'state_province', 'postal_code',
+              'latitude', 'longitude', 'known_use', 'owner', 'owner_type',)
 
     def get_rows(self):
         for lot in self.get_lots():
             yield self._as_dict(lot)
 
 
-class LotsKML(LotFieldsMixin, FilteredLotsMixin, KMLView):
+class LotsKML(ExportMixin, LotFieldsMixin, FilteredLotsMixin, KMLView):
     fields = ('address_line1', 'city', 'state_province', 'postal_code',
               'known_use', 'owner', 'owner_type',)
-
-    def get_filename(self):
-        return 'Grounded lots %s' % date.today().strftime('%Y-%m-%d')
 
     def get_context_data(self, **kwargs):
         return {
@@ -165,8 +172,8 @@ class LotsKML(LotFieldsMixin, FilteredLotsMixin, KMLView):
         return super(LotsKML, self).render_to_response(context)
 
 
-class LotsGeoJSON(LotFieldsMixin, FilteredLotsMixin, GeoJSONResponseMixin,
-                  JSONResponseView):
+class LotsGeoJSON(ExportMixin, LotFieldsMixin, FilteredLotsMixin,
+                  GeoJSONResponseMixin, JSONResponseView):
     fields = ('address_line1', 'city', 'state_province', 'postal_code',
               'known_use', 'owner', 'owner_type',)
 
@@ -179,9 +186,6 @@ class LotsGeoJSON(LotFieldsMixin, FilteredLotsMixin, GeoJSONResponseMixin,
             geometry=json.loads(lot.centroid.geojson),
             properties=self._as_dict(lot),
         )
-
-    def get_filename(self):
-        return 'Grounded lots %s' % date.today().strftime('%Y-%m-%d')
 
     def get_queryset(self):
         return self.get_lots()
