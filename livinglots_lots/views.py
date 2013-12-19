@@ -163,7 +163,7 @@ class LotsKML(ExportMixin, LotFieldsMixin, FilteredLotsMixin, KMLView):
 
     def get_context_data(self, **kwargs):
         return {
-            'places': self.get_lots().kml(),
+            'places': self.get_lots().qs.kml(),
             'download': True,
             'filename': self.get_filename(),
         }
