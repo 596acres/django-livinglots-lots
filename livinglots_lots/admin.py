@@ -14,6 +14,7 @@ class BaseLotAdmin(OSMGeoAdmin):
     actions = ('add_to_group',)
     list_display = ('address_line1', 'city', 'name', 'known_use',)
     list_filter = ('known_use',)
+    openlayers_url = '//cdnjs.cloudflare.com/ajax/libs/openlayers/2.12/OpenLayers.min.js'
     readonly_fields = ('added',)
     search_fields = ('address_line1', 'name',)
 
