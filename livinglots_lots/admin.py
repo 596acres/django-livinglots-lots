@@ -10,7 +10,7 @@ from .admin_views import AddToGroupView
 from .models import Use
 
 
-class LotAdmin(OSMGeoAdmin):
+class BaseLotAdmin(OSMGeoAdmin):
     actions = ('add_to_group',)
     list_display = ('address_line1', 'city', 'name', 'known_use',)
     list_filter = ('known_use',)
@@ -50,7 +50,7 @@ class LotAdmin(OSMGeoAdmin):
         app_label, object_name = (opts.app_label, opts.object_name.lower())
         prefix = "%s_%s" % (app_label, object_name)
 
-        urls = super(LotAdmin, self).get_urls()
+        urls = super(BaseLotAdmin, self).get_urls()
         my_urls = patterns('',
             url(r'^add-to-group/', AddToGroupView.as_view(),
                 name='%s_add_to_group' % prefix),
@@ -67,7 +67,7 @@ class LotInlineAdmin(admin.TabularInline):
     template = 'admin/lots/lot/edit_inline/tabular.html'
 
 
-class LotGroupAdmin(LotAdmin):
+class LotGroupAdmin(BaseLotAdmin):
     inlines = (LotInlineAdmin,)
 
 
@@ -76,6 +76,6 @@ class UseAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',),}
 
 
-admin.site.register(get_lot_model(), LotAdmin)
+admin.site.register(get_lot_model(), BaseLotAdmin)
 admin.site.register(get_lotgroup_model(), LotGroupAdmin)
 admin.site.register(Use, UseAdmin)
