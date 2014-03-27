@@ -5,7 +5,8 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from inplace.models import Place, PlaceManager
-from livinglots import get_lot_model, get_owner_model
+from livinglots import (get_lot_model, get_lot_model_name, get_lotlayer_model,
+                        get_owner_model)
 
 
 class BaseLotManager(PlaceManager):
@@ -116,6 +117,10 @@ class BaseLot(Place):
     def __unicode__(self):
         return u'%s' % (self.address_line1,)
 
+    def save(self, *args, **kwargs):
+        super(BaseLot, self).save(*args, **kwargs)
+        self.check_layers()
+
     @models.permalink
     def get_absolute_url(self):
         return ('lots:lot_detail', (), { 'pk': self.pk, })
@@ -198,6 +203,57 @@ class BaseLot(Place):
         classes created with django-filter.
         """
         raise NotImplementedError('Implement BaseLot.get_filter')
+
+    def check_layers(self):
+        """
+        Add lot to each lotlayer it should be part of, remove it from the ones
+        it should not be part of.
+        """
+        # Clear lot's layers
+        self.lotlayer_set.clear()
+
+        # Get model classes
+        lot_model = get_lot_model()
+        lotlayer_model = get_lotlayer_model()
+
+        # Check each layer to see if the lot is part of it
+        layer_filters = lotlayer_model.get_layer_filters()
+        for layer_name in layer_filters.keys():
+            # If lot should be in layer, add it
+            try:
+                if lot_model.objects.filter(layer_filters[layer_name], pk=self.pk).exists():
+                    layer, created = lotlayer_model.objects.get_or_create(name=layer_name)
+                    self.lotlayer_set.add(layer)
+            except Exception:
+                pass
+
+
+class BaseLotLayer(models.Model):
+    """
+    A grouping of lots often conceptualized as a "layer", or a set of lots that
+    you might want to hide or show together.
+
+    This can make queries more efficient. For example, you might have a layer
+    named 'public' that contains all lots with public owners. This would avoid
+    the necessity of joining the lots with multiple tables (eg, parcel, owner,
+    owner type).
+    """
+    name = models.CharField(max_length=128, unique=True)
+    lots = models.ManyToManyField(get_lot_model_name())
+
+    @classmethod
+    def get_layer_filters(cls):
+        """
+        Get a dictionary of layer names to a Q query definition for each of the
+        lot layers.
+        """
+        raise NotImplementedError('Implement BaseLotLayer.get_layer_filters()')
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        abstract = True
 
 
 class BaseLotGroup(models.Model):
