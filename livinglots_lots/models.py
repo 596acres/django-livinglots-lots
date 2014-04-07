@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from inplace.models import Place, PlaceManager
 from livinglots import (get_lot_model, get_lot_model_name, get_lotlayer_model,
-                        get_owner_model)
+                        get_owner_model_name)
 
 
 class BaseLotManager(PlaceManager):
@@ -50,7 +50,7 @@ class BaseLot(Place):
     objects = BaseLotManager()
     visible = VisibleLotManager()
 
-    owner = models.ForeignKey(get_owner_model(),
+    owner = models.ForeignKey(get_owner_model_name(),
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
