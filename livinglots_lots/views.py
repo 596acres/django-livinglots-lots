@@ -4,19 +4,22 @@ import json
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.http import Http404, HttpResponseRedirect
+from django.http import (Http404, HttpResponseRedirect, HttpResponse,
+                         HttpResponseBadRequest)
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormMixin
 
+from braces.views import PermissionRequiredMixin
 from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
 from livinglots import get_lot_model
 from livinglots_genericviews import CSVView, JSONResponseView
 
+from .exceptions import ParcelAlreadyInLot
 from .models import Use
 from .signals import lot_details_loaded
 
@@ -303,3 +306,55 @@ class LotGeoJSONDetailView(LotGeoJSONMixin, GeoJSONListView):
     def get_queryset(self):
         lot = get_object_or_404(self.model, pk=self.kwargs['pk'])
         return self.model.objects.find_nearby(lot, include_self=True, miles=.1)
+
+
+#
+# Lot creation views
+#
+
+
+class BaseCreateLotView(PermissionRequiredMixin, View):
+    permission_required = 'lots.add_lot'
+
+    def get_parcels(self, pks):
+        raise NotImplementedError('Implement BaseCreateLotView.get_parcels()')
+
+    def create_lot_for_parcels(self, pks, **lot_kwargs):
+        parcels = self.get_parcels(pks)
+        return get_lot_model().objects.create_lot_for_parcels(parcels, **lot_kwargs)
+
+    def post(self, request, *args, **kwargs):
+        parcel_pks = request.POST.get('pks')
+        parcel_pks = parcel_pks.split(',')
+        try:
+            lot_kwargs = {
+                'added_reason': 'Created using add-lot mode',
+                'known_use_certainty': 10,
+                'known_use_locked': True,
+            }
+            lot = self.create_lot_for_parcels(parcel_pks, **lot_kwargs)
+            if lot:
+                return HttpResponse('%s' % lot.pk, content_type='text/plain')
+            else:
+                return HttpResponseBadRequest('No lot created')
+        except ParcelAlreadyInLot:
+            return HttpResponseBadRequest('One or more parcels already in lots')
+
+
+class CheckLotWithParcelExistsView(PermissionRequiredMixin, View):
+    permission_required = 'lots.add_lot'
+
+    def get_by_parcel(self, pk):
+        try:
+            return get_lot_model().objects.get(parcel__pk=pk)
+        except Exception:
+            return None
+
+    def get(self, request, *args, **kwargs):
+        parcel_pk = kwargs.get('pk')
+        lot = self.get_by_parcel(parcel_pk)
+        if lot:
+            return HttpResponse(lot.pk)
+        else:
+            return HttpResponse('None')
+
