@@ -1,10 +1,19 @@
 from django import forms
+from django.forms import HiddenInput, ModelChoiceField
 from django.utils.translation import ugettext_lazy as _
 
 from chosen.forms import ChosenSelectMultiple
 from inplace.boundaries.models import Boundary, Layer
+from livinglots import get_lot_model, get_owner_model
 
 from .models import Use
+
+
+class HideLotForm(forms.Form):
+    lot = ModelChoiceField(queryset=get_lot_model().objects.all(),
+                           widget=HiddenInput())
+    use = ModelChoiceField(queryset=Use.objects.filter(visible=False),
+                           empty_label=None)
 
 
 class FiltersForm(forms.Form):
@@ -76,8 +85,7 @@ class FiltersForm(forms.Form):
 
     owner__in = forms.ModelMultipleChoiceField(
         label=_('Owner'),
-        # TODO get Owner model dynamically
-        queryset=Owner.objects.filter(owner_type='public'),
+        queryset=get_owner_model().objects.filter(owner_type='public'),
         required=False,
         widget=forms.CheckboxSelectMultiple(),
     )

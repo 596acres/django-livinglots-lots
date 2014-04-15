@@ -1,9 +1,9 @@
 from django.conf.urls import patterns, url
 
-from .views import (CheckLotWithParcelExistsView, LotDetailView,
-                    LotGeoJSONDetailView, LotsGeoJSON, LotsGeoJSONPolygon,
-                    LotsGeoJSONCentroid, LotsCountView, LotsCountBoundaryView,
-                    LotsCSV, LotsKML)
+from .views import (CheckLotWithParcelExistsView, HideLotView,
+                    HideLotSuccessView, LotDetailView, LotGeoJSONDetailView,
+                    LotsGeoJSON, LotsGeoJSONPolygon, LotsGeoJSONCentroid,
+                    LotsCountView, LotsCountBoundaryView, LotsCSV, LotsKML)
 
 
 urlpatterns = patterns('',
@@ -21,6 +21,11 @@ urlpatterns = patterns('',
     url(r'^(?P<pk>\d+)/$', LotDetailView.as_view(), name='lot_detail'),
     url(r'^(?P<pk>\d+)/geojson/$', LotGeoJSONDetailView.as_view(),
         name='lot_detail_geojson'),
+
+    url(r'^(?P<pk>\d+)/hide/$', HideLotView.as_view(),
+        name='hide_lot'),
+    url(r'^(?P<pk>\d+)/hide/success/$', HideLotSuccessView.as_view(),
+        name='hide_lot_success'),
 
     url(r'^create/by-parcels/check-parcel/(?P<pk>\d+)/$',
         CheckLotWithParcelExistsView.as_view(),

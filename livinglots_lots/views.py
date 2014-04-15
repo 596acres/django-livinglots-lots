@@ -4,11 +4,12 @@ import json
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponseRedirect, HttpResponse,
                          HttpResponseBadRequest)
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import TemplateView, View
+from django.views.generic import FormView, TemplateView, View
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import FormMixin
 
@@ -20,6 +21,7 @@ from livinglots import get_lot_model
 from livinglots_genericviews import CSVView, JSONResponseView
 
 from .exceptions import ParcelAlreadyInLot
+from .forms import HideLotForm
 from .models import Use
 from .signals import lot_details_loaded
 
@@ -358,3 +360,39 @@ class CheckLotWithParcelExistsView(PermissionRequiredMixin, View):
         else:
             return HttpResponse('None')
 
+
+#
+# Hide
+#
+
+
+class HideLotSuccessView(LotContextMixin, PermissionRequiredMixin,
+                         TemplateView):
+    permission_required = 'lots.change_lot'
+    template_name = 'livinglots/lots/hide_success.html'
+
+
+class HideLotView(LotContextMixin, PermissionRequiredMixin, FormView):
+    form_class = HideLotForm
+    permission_required = 'lots.change_lot'
+    template_name = 'livinglots/lots/hide.html'
+
+    def get_success_url(self):
+        return reverse('lots:hide_lot_success', kwargs={
+            'pk': self.get_lot().pk,
+        })
+
+    def get_initial(self):
+        initial = super(HideLotView, self).get_initial()
+        initial.update({
+            'lot': self.get_lot(),
+        })
+        return initial
+
+    def form_valid(self, form):
+        lot = self.get_lot()
+        lot.known_use = form.cleaned_data['use']
+        lot.known_use_certainty = 10
+        lot.known_use_locked = True
+        lot.save()
+        return super(HideLotView, self).form_valid(form)
