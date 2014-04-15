@@ -5,11 +5,64 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from inplace.models import Place, PlaceManager
-from livinglots import (get_lot_model, get_lot_model_name, get_lotlayer_model,
+from livinglots import (get_lot_model, get_lot_model_name, get_lotgroup_model,
+                        get_lotlayer_model, get_owner_model,
                         get_owner_model_name)
+
+from .exceptions import ParcelAlreadyInLot
 
 
 class BaseLotManager(PlaceManager):
+
+    def create_lot_for_parcels(self, parcels, **lot_kwargs):
+        lots = []
+
+        # Check parcel validity
+        for parcel in parcels:
+            if parcel.lot_model.count():
+                raise ParcelAlreadyInLot()
+
+        # Create lots for each parcel
+        # NB: Assumes parcels have these properties!
+        for parcel in parcels:
+            kwargs = {
+                'parcel': parcel,
+                'polygon': parcel.geom,
+                'centroid': parcel.geom.centroid,
+                'address_line1': parcel.street_address,
+                'name': parcel.street_address,
+                'postal_code': parcel.zip_code,
+                'city': parcel.city,
+                'state_province': parcel.state or 'CA',
+            }
+            kwargs.update(**lot_kwargs)
+
+            # Create or get owner for parcels
+            if parcel.owner_name:
+                (owner, created) = get_owner_model().objects.get_or_create(
+                    parcel.owner_name,
+                    defaults={
+                        'owner_type': parcel.owner_type,
+                    }
+                )
+                kwargs['owner'] = owner
+
+            lot = get_lot_model()(**kwargs)
+            lot.save()
+            lots.append(lot)
+
+        # Multiple lots, create a lot group
+        if len(lots) > 1:
+            example_lot = lots[0]
+            kwargs = {
+                'address_line1': example_lot.address_line1,
+                'name': example_lot.name,
+            }
+            kwargs.update(**lot_kwargs)
+            lot = get_lotgroup_model()(**kwargs)
+            lot.save()
+            lot.update(lots=lots)
+        return lot
 
     def get_visible(self):
         """
@@ -159,6 +212,13 @@ class BaseLot(Place):
         except Exception:
             return 1
     number_of_lots = property(_get_number_of_lots)
+
+    def _get_lots(self):
+        try:
+            return self.lotgroup.lot_set.all()
+        except Exception:
+            return [self,]
+    lots = property(_get_lots)
 
     def _get_display_name(self):
         if self.name:
