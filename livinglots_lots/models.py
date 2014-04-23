@@ -172,7 +172,8 @@ class BaseLot(Place):
 
     def save(self, *args, **kwargs):
         super(BaseLot, self).save(*args, **kwargs)
-        self.check_layers()
+        if get_lotlayer_model():
+            self.check_layers()
 
     @models.permalink
     def get_absolute_url(self):
