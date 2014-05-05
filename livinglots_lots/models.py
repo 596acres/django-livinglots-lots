@@ -20,7 +20,7 @@ class BaseLotManager(PlaceManager):
         # Check parcel validity
         for parcel in parcels:
             if parcel.lot_model.count():
-                raise ParcelAlreadyInLot()
+                raise ParcelAlreadyInLot('Parcel %d is already part of a lot' % parcel.pk)
 
         # Create lots for each parcel
         # NB: Assumes parcels have these properties!
