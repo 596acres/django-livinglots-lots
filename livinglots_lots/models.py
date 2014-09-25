@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from inplace.models import Place, PlaceManager
 from livinglots import (get_lot_model, get_lot_model_name, get_lotgroup_model,
                         get_lotlayer_model, get_owner_model,
-                        get_owner_model_name)
+                        get_owner_contact_model_name, get_owner_model_name)
 
 from .exceptions import ParcelAlreadyInLot
 
@@ -104,6 +104,14 @@ class BaseLot(Place):
     visible = VisibleLotManager()
 
     owner = models.ForeignKey(get_owner_model_name(),
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text=_('The owner of this lot.'),
+        verbose_name=_('owner'),
+    )
+
+    owner_contact = models.ForeignKey(get_owner_contact_model_name(),
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
