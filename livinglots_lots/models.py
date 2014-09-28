@@ -366,7 +366,10 @@ class BaseLotGroup(models.Model):
                 self.polygon = union
 
         # Update centroid
-        self.centroid = self.polygon.centroid
+        try:
+            self.centroid = self.polygon.centroid
+        except AttributeError:
+            self.centroid = list(lots)[0].centroid
         self.save()
 
     def __unicode__(self):
