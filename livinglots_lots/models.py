@@ -71,7 +71,7 @@ class BaseLotManager(PlaceManager):
             * The known_use_certainty is over 3
             * If any steward_projects exist, they opted in to being included
         """
-        return super(BaseLotManager, self).get_query_set().filter(
+        return super(BaseLotManager, self).get_queryset().filter(
             Q(
                 Q(known_use__isnull=True) |
                 Q(known_use__visible=True, steward_inclusion_opt_in=True)
@@ -85,7 +85,7 @@ class BaseLotManager(PlaceManager):
         if visible_only:
             qs = self.get_visible()
         else:
-            qs = super(BaseLotManager, self).get_query_set()
+            qs = super(BaseLotManager, self).get_queryset()
         if not include_self:
             qs = qs.exclude(pk=lot.pk)
         return qs.filter(centroid__distance_lte=(lot.centroid, D(mi=miles)))
@@ -94,7 +94,7 @@ class BaseLotManager(PlaceManager):
 class VisibleLotManager(BaseLotManager):
     """A manager that only retrieves lots that are publicly viewable."""
 
-    def get_query_set(self):
+    def get_queryset(self):
         return self.get_visible()
 
 
