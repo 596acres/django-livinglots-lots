@@ -104,7 +104,7 @@ class LotFieldsMixin(object):
                 return None
 
     def _as_dict(self, lot):
-        return dict([(f, self._field_value(lot, f)) for f in self.fields])
+        return dict([(f, self._field_value(lot, f)) for f in self.get_fields()])
 
 
 class LotGeoJSONMixin(object):
