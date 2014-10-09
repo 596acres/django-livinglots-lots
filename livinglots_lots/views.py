@@ -158,7 +158,7 @@ class LotsCSV(ExportMixin, LotFieldsMixin, FilteredLotsMixin, CSVView):
               'latitude', 'longitude', 'known_use', 'owner', 'owner_type',)
 
     def get_rows(self):
-        for lot in self.get_lots():
+        for lot in self.get_lots().qs.distinct():
             yield self._as_dict(lot)
 
 
