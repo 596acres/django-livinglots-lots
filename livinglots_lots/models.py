@@ -115,8 +115,8 @@ class BaseLot(Place):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
-        help_text=_('The owner of this lot.'),
-        verbose_name=_('owner'),
+        help_text=_('The contact for the owner of this lot.'),
+        verbose_name=_('owner contact'),
     )
 
     known_use = models.ForeignKey('Use',
