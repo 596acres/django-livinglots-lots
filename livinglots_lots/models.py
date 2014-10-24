@@ -14,42 +14,47 @@ from .exceptions import ParcelAlreadyInLot
 
 class BaseLotManager(PlaceManager):
 
+    def get_lot_kwargs(self, parcel, **defaults):
+        # NB: Assumes parcels have these properties!
+        kwargs = {
+            'parcel': parcel,
+            'polygon': parcel.geom,
+            'centroid': parcel.geom.centroid,
+            'address_line1': parcel.street_address,
+            'name': parcel.street_address,
+            'postal_code': parcel.zip_code,
+            'city': parcel.city,
+            'state_province': parcel.state,
+        }
+        kwargs.update(**defaults)
+
+        # Create or get owner for parcels
+        if parcel.owner_name:
+            (owner, created) = get_owner_model().objects.get_or_create(
+                parcel.owner_name,
+                defaults={
+                    'owner_type': parcel.owner_type,
+                }
+            )
+            kwargs['owner'] = owner
+
+        return kwargs
+
+    def create_lot_for_parcel(self, parcel, **lot_kwargs):
+        # Check parcel validity
+        if parcel.lot_set.count():
+            raise ParcelAlreadyInLot('Parcel %d is already part of a lot' % parcel.pk)
+
+        lot = get_lot_model()(**self.get_lot_kwargs(parcel, **lot_kwargs))
+        lot.save()
+        return lot
+
     def create_lot_for_parcels(self, parcels, **lot_kwargs):
         lots = []
 
-        # Check parcel validity
-        for parcel in parcels:
-            if parcel.lot_model.count():
-                raise ParcelAlreadyInLot('Parcel %d is already part of a lot' % parcel.pk)
-
         # Create lots for each parcel
-        # NB: Assumes parcels have these properties!
         for parcel in parcels:
-            kwargs = {
-                'parcel': parcel,
-                'polygon': parcel.geom,
-                'centroid': parcel.geom.centroid,
-                'address_line1': parcel.street_address,
-                'name': parcel.street_address,
-                'postal_code': parcel.zip_code,
-                'city': parcel.city,
-                'state_province': parcel.state or 'CA',
-            }
-            kwargs.update(**lot_kwargs)
-
-            # Create or get owner for parcels
-            if parcel.owner_name:
-                (owner, created) = get_owner_model().objects.get_or_create(
-                    parcel.owner_name,
-                    defaults={
-                        'owner_type': parcel.owner_type,
-                    }
-                )
-                kwargs['owner'] = owner
-
-            lot = get_lot_model()(**kwargs)
-            lot.save()
-            lots.append(lot)
+            lots.append(self.create_lot_for_parcel(parcel, **lot_kwargs))
 
         # Multiple lots, create a lot group
         if len(lots) > 1:
@@ -62,6 +67,8 @@ class BaseLotManager(PlaceManager):
             lot = get_lotgroup_model()(**kwargs)
             lot.save()
             lot.update(lots=lots)
+        else:
+            lot = lots[0]
         return lot
 
     def get_visible(self):
