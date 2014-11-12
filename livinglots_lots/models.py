@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import MultiPolygon
 from django.contrib.gis.measure import D
 from django.db import models
@@ -235,6 +236,61 @@ class BaseLot(Place):
         except Exception:
             return [self,]
     lots = property(_get_lots)
+
+    def get_group(self):
+        """
+        Get the lotgroup for this lot, whether this is a lotgroup posing as a 
+        lot or it is part of a lotgroup.
+        """
+        try:
+            return self.lotgroup
+        except get_lotgroup_model().DoesNotExist:
+            return self.group
+
+    def get_new_lotgroup_kwargs(self):
+        return {
+            'address_line1': self.address_line1,
+            'known_use': self.known_use,
+            'name': self.name,
+            'postal_code': self.postal_code,
+        }
+
+    def reassign_objects(self, new_lot, **kwargs):
+        """Reassign related objects (eg, notes or organizers) to the new lot"""
+        pass
+
+    def group_with(self, *lots_to_add):
+        """
+        Group this lot with the given lots_to_add.
+
+        Uses an existing group that one of these lots is a part of, if
+        available, or creates a new one.
+        """
+
+        # Find group or create one
+        lots = (self,) + lots_to_add
+        groups = filter(None, [lot.get_group() for lot in lots])
+
+        try:
+            # If multiple groups, pick one
+            group = groups[0]
+        except IndexError:
+            # Else create a new group
+            group = get_lotgroup_model()(**self.get_new_lotgroup_kwargs())
+
+        # Now update all the lots' related objects to point at the group
+        update_kwargs = {
+            'content_type': ContentType.objects.get_for_model(get_lot_model()),
+            'object_id': group.pk,
+        }
+        for lot in lots:
+            # Add the lot to the group
+            group.add(lot)
+
+            # Reassign all lots' notes, photos, files, organizers to group
+            lot.reassign_objects(group, **update_kwargs)
+
+        return group
 
     def _get_display_name(self):
         if self.name:
