@@ -111,21 +111,23 @@ class BaseLot(Place):
     objects = BaseLotManager()
     visible = VisibleLotManager()
 
-    owner = models.ForeignKey(get_owner_model_name(),
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-        help_text=_('The owner of this lot.'),
-        verbose_name=_('owner'),
-    )
+    if get_owner_model_name():
+        owner = models.ForeignKey(get_owner_model_name(),
+            blank=True,
+            null=True,
+            on_delete=models.SET_NULL,
+            help_text=_('The owner of this lot.'),
+            verbose_name=_('owner'),
+        )
 
-    owner_contact = models.ForeignKey(get_owner_contact_model_name(),
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-        help_text=_('The contact for the owner of this lot.'),
-        verbose_name=_('owner contact'),
-    )
+    if get_owner_contact_model_name():
+        owner_contact = models.ForeignKey(get_owner_contact_model_name(),
+            blank=True,
+            null=True,
+            on_delete=models.SET_NULL,
+            help_text=_('The contact for the owner of this lot.'),
+            verbose_name=_('owner contact'),
+        )
 
     known_use = models.ForeignKey('Use',
         blank=True,
