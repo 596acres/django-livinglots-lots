@@ -198,7 +198,8 @@ class BaseLot(Place):
         return ('lots:lot_detail', (), { 'pk': self.pk, })
 
     def find_nearby(self, count=5):
-        return self.__class__.objects.find_nearby(self)[:count]
+        return self.__class__.objects.find_nearby(self).centroid() \
+                .distance(self.centroid).order_by('distance')[:count]
     nearby = property(find_nearby)
 
     def calculate_known_use_certainty(self):
