@@ -280,6 +280,7 @@ class BaseLot(Place):
         except IndexError:
             # Else create a new group
             group = get_lotgroup_model()(**self.get_new_lotgroup_kwargs())
+            group.save()
 
         # Now update all the lots' related objects to point at the group
         update_kwargs = {
