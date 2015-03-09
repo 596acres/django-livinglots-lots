@@ -327,20 +327,51 @@ class BaseCreateLotView(PermissionRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         parcel_pks = request.POST.get('pks')
-        parcel_pks = parcel_pks.split(',')
-        try:
-            lot_kwargs = {
-                'added_reason': 'Created using add-lot mode',
-                'known_use_certainty': 10,
-                'known_use_locked': True,
-            }
-            lot = self.create_lot_for_parcels(parcel_pks, **lot_kwargs)
-            if lot:
-                return HttpResponse('%s' % lot.pk, content_type='text/plain')
-            else:
-                return HttpResponseBadRequest('No lot created')
-        except ParcelAlreadyInLot:
-            return HttpResponseBadRequest('One or more parcels already in lots')
+        lot = None
+        lot_kwargs = {
+            'added_reason': 'Created using add-lot mode',
+            'known_use_certainty': 10,
+            'known_use_locked': True,
+        }
+
+        if parcel_pks:
+            parcel_pks = parcel_pks.split(',')
+            try:
+                lot = self.create_lot_for_parcels(parcel_pks, **lot_kwargs)
+            except ParcelAlreadyInLot:
+                return HttpResponseBadRequest('One or more parcels already in lots')
+
+        if lot:
+            return HttpResponse('%s' % lot.pk, content_type='text/plain')
+        else:
+            return HttpResponseBadRequest('No lot created')
+
+
+class BaseCreateLotByGeomView(View):
+
+    def post(self, request, *args, **kwargs):
+        geom = request.POST.get('geom')
+        lot = None
+        lot_kwargs = {
+            'added_reason': 'Drawn using add-lot mode',
+            'known_use_certainty': 10,
+            'known_use_locked': True,
+        }
+
+        if geom:
+            try:
+                lot = get_lot_model().objects.create_lot_for_geoms(geom, **lot_kwargs)
+            except ValueError:
+                return HttpResponseBadRequest('Only polygons are allowed')
+
+        if lot:
+            return HttpResponse('%s' % lot.pk, content_type='text/plain')
+        else:
+            return HttpResponseBadRequest('No lot created')
+
+
+class CreateLotByGeomView(BaseCreateLotByGeomView):
+    permission_required = 'lots.add_lot'
 
 
 class CheckLotWithParcelExistsView(PermissionRequiredMixin, View):

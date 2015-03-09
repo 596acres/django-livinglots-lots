@@ -1,5 +1,7 @@
+import geojson
+
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.geos import MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon
 from django.contrib.gis.measure import D
 from django.db import models
 from django.db.models import Q
@@ -41,6 +43,21 @@ class BaseLotManager(PlaceManager):
 
         return kwargs
 
+    def get_lot_kwargs_by_geom(self, geom, **defaults):
+        """Get kwargs to be used to create a lot for the given geom."""
+        kwargs = {
+            'centroid': geom.centroid,
+            'polygon': geom,
+        }
+        kwargs.update(**defaults)
+        return kwargs
+
+    def get_lotgroup_kwargs(self, lots, **defaults):
+        """Get kwargs to be used to create a lotgroup for the given lots."""
+        kwargs = {}
+        kwargs.update(**defaults)
+        return kwargs
+
     def create_lot_for_parcel(self, parcel, **lot_kwargs):
         # Check parcel validity
         if parcel.lot_set.count():
@@ -65,6 +82,31 @@ class BaseLotManager(PlaceManager):
                 'name': example_lot.name,
             }
             kwargs.update(**lot_kwargs)
+            lot = get_lotgroup_model()(**kwargs)
+            lot.save()
+            lot.update(lots=lots)
+        else:
+            lot = lots[0]
+        return lot
+
+    def create_lot_for_geom(self, geom, **lot_kwargs):
+        kwargs = self.get_lot_kwargs_by_geom(MultiPolygon(geom))
+        kwargs.update(**lot_kwargs)
+        lot = get_lot_model()(**kwargs)
+        lot.save()
+        return lot
+
+    def create_lot_for_geoms(self, geoms, **lot_kwargs):
+        lots = []
+        collection = geojson.loads(geoms)
+        for feature in collection['features']:
+            feature_geom = GEOSGeometry(geojson.dumps(feature['geometry']))
+            if feature_geom.geom_type not in ('Polygon', 'MultiPolygon'):
+                raise ValueError('Only Polygon or MultiPolygon geometries are '
+                                 'permitted when creating lots')
+            lots.append(self.create_lot_for_geom(feature_geom, **lot_kwargs))
+        if len(lots) > 1:
+            kwargs = self.get_lotgroup_kwargs(lots, **lot_kwargs)
             lot = get_lotgroup_model()(**kwargs)
             lot.save()
             lot.update(lots=lots)
@@ -186,7 +228,10 @@ class BaseLot(Place):
         )
 
     def __unicode__(self):
-        return u'%s' % (self.address_line1,)
+        try:
+            return u'%s' % (self.address_line1,)
+        except TypeError:
+            return u'%d' % self.pk
 
     def save(self, *args, **kwargs):
         super(BaseLot, self).save(*args, **kwargs)
