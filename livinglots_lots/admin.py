@@ -20,8 +20,13 @@ class BaseLotAdmin(OSMGeoAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'address_line1', 'address_line2', 'city',
-                       'state_province', 'postal_code', 'added', 'group',),
+            'fields': (
+                'name',
+                ('address_line1', 'address_line2', 'city',),
+                ('state_province', 'postal_code',),
+                ('added', 'added_reason',),
+                'group',
+            ),
         }),
         ('Known use', {
             'fields': ('known_use', 'known_use_certainty',
