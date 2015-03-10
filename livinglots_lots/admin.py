@@ -15,7 +15,7 @@ class BaseLotAdmin(OSMGeoAdmin):
     list_display = ('address_line1', 'city', 'name', 'known_use',)
     list_filter = ('known_use',)
     openlayers_url = '//cdnjs.cloudflare.com/ajax/libs/openlayers/2.12/OpenLayers.min.js'
-    readonly_fields = ('added',)
+    readonly_fields = ('added', 'stewards_list',)
     search_fields = ('address_line1', 'name',)
 
     fieldsets = (
@@ -33,7 +33,8 @@ class BaseLotAdmin(OSMGeoAdmin):
                        'known_use_locked',),
         }),
         ('Stewards', {
-            'fields': ('steward_inclusion_opt_in',),
+            'classes': ('collapse',),
+            'fields': ('stewards_list', 'steward_inclusion_opt_in',),
         }),
         ('Other data', {
             'classes': ('collapse',),
@@ -62,6 +63,19 @@ class BaseLotAdmin(OSMGeoAdmin):
                 name='%s_add_to_group' % prefix),
         )
         return my_urls + urls
+
+    def stewards_list(self, obj):
+        value = ''
+        for steward in obj.steward_projects.all():
+            urlname = 'admin:%s_%s_change' % (steward._meta.app_label,
+                                              steward._meta.model_name,)
+            value += '<a href="%s" target="_blank">%s</a>' % (
+                reverse(urlname, args=(steward.pk,)),
+                steward.project_name,
+            )
+        return value
+
+    stewards_list.short_description = 'stewards'
 
 
 class LotInlineAdmin(admin.TabularInline):
