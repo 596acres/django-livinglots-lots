@@ -194,6 +194,8 @@ class BaseLot(Place):
     )
 
     added_reason = models.CharField(_('reason added'),
+        blank=True,
+        null=True,
         max_length=256,
         help_text=('The original reason this lot was added'),
     )
