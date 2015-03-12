@@ -75,6 +75,7 @@ class BaseLotAdmin(OSMGeoAdmin):
             )
         return value
 
+    stewards_list.allow_tags = True
     stewards_list.short_description = 'stewards'
 
 
