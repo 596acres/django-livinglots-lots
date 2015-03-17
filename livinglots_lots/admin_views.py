@@ -4,19 +4,15 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.views.generic import FormView
 
+from autocomplete_light import ChoiceWidget
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
-from chosen.forms import ChosenSelect
 from livinglots import get_lot_model, get_lotgroup_model
-from livinglots_forms.widgets import AddAnotherWidgetWrapper
 
 
 class AddToGroupForm(forms.Form):
     group = forms.ModelChoiceField(
-        queryset=get_lotgroup_model().objects.all(),
-        widget=AddAnotherWidgetWrapper(
-            ChosenSelect(),
-            get_lotgroup_model(),
-        )
+        queryset=get_lotgroup_model().objects.all().order_by('name'),
+        widget=ChoiceWidget('LotGroupAutocomplete')
     )
 
     lots = forms.ModelMultipleChoiceField(
