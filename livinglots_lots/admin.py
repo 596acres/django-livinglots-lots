@@ -1,8 +1,12 @@
 from django.conf.urls import patterns, url
 from django.contrib import admin
-from django.contrib.gis.admin import OSMGeoAdmin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+
+try:
+    from leaflet.admin import LeafletGeoAdmin as GeoAdmin
+except ImportError:
+    from django.contrib.gis.admin import OSMGeoAdmin as GeoAdmin
 
 from livinglots import get_lot_model, get_lotgroup_model
 
@@ -10,7 +14,7 @@ from .admin_views import AddToGroupView
 from .models import Use
 
 
-class BaseLotAdmin(OSMGeoAdmin):
+class BaseLotAdmin(GeoAdmin):
     actions = ('add_to_group',)
     list_display = ('address_line1', 'city', 'name', 'known_use',)
     list_filter = ('known_use',)
