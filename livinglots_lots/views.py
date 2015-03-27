@@ -11,9 +11,11 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView, TemplateView, View
 from django.views.generic.base import ContextMixin
+from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
 
-from braces.views import PermissionRequiredMixin
+from braces.views import (CsrfExemptMixin, JSONResponseMixin, LoginRequiredMixin,
+                          PermissionRequiredMixin)
 from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
@@ -390,6 +392,45 @@ class CheckLotWithParcelExistsView(PermissionRequiredMixin, View):
             return HttpResponse(lot.pk)
         else:
             return HttpResponse('None')
+
+
+#
+# Grouping
+#
+
+
+class AddToGroupView(CsrfExemptMixin, LoginRequiredMixin, 
+                     PermissionRequiredMixin, JSONResponseMixin,
+                     SingleObjectMixin, View):
+    """
+    A view for adding a lot to a group.
+
+    This requires two POST parameters:
+     * pk: the lot or lot group being added to
+     * lot_to_add: the lot that is not currently in the group but will be after
+       this view does its work
+    """
+    model = get_lot_model()
+    permission_required = 'lots.add_lot'
+
+    def get_success_message(self, to_add):
+        msg = 'Successfully added %s to this group. ' % str(to_add)
+        msg += ("You're <strong>not done yet</strong>: we've merged notes, "
+                "photos, organizers, and other content, but you should check "
+                "on the group's owner and known use information by clicking "
+                "<strong>Edit this lot</strong>.")
+        return msg
+
+    def post(self, request, *args, **kwargs):
+        lot = self.get_object()
+        to_add = get_lot_model().objects.get(pk=request.POST.get('lot_to_add'))
+        context = {
+            'lot': lot.pk,
+            'lot_to_add': to_add.pk,
+            'group': lot.group_with(to_add).pk,
+        }
+        messages.success(request, self.get_success_message(to_add))
+        return self.render_json_response(context)
 
 
 #

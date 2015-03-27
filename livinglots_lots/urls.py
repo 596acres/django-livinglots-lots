@@ -1,10 +1,10 @@
 from django.conf.urls import patterns, url
 
-from .views import (CheckLotWithParcelExistsView, CreateLotByGeomView,
-                    HideLotView, HideLotSuccessView, LotDetailView,
-                    LotGeoJSONDetailView, LotsGeoJSON, LotsGeoJSONPolygon,
-                    LotsGeoJSONCentroid, LotsCountView, LotsCountBoundaryView,
-                    LotsCSV, LotsKML)
+from .views import (AddToGroupView, CheckLotWithParcelExistsView,
+                    CreateLotByGeomView, HideLotView, HideLotSuccessView,
+                    LotDetailView, LotGeoJSONDetailView, LotsGeoJSON,
+                    LotsGeoJSONPolygon, LotsGeoJSONCentroid, LotsCountView,
+                    LotsCountBoundaryView, LotsCSV, LotsKML)
 
 
 urlpatterns = patterns('',
@@ -35,4 +35,7 @@ urlpatterns = patterns('',
     url(r'^create/by-geom/$',
         CreateLotByGeomView.as_view(),
         name='create_by_geom'),
+
+    url(r'^(?P<pk>\d+)/group/add/$', AddToGroupView.as_view(),
+        name='add_to_group'),
 )
