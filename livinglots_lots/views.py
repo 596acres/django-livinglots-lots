@@ -433,6 +433,34 @@ class AddToGroupView(CsrfExemptMixin, LoginRequiredMixin,
         return self.render_json_response(context)
 
 
+class RemoveFromGroupView(CsrfExemptMixin, LoginRequiredMixin,
+                          PermissionRequiredMixin, JSONResponseMixin,
+                          SingleObjectMixin, View):
+    """
+    A view for removing a lot from a group.
+
+    This requires two POST parameters:
+     * pk: The lot to remove from its group. Lots can only be in one group at a
+       time, so this should be sufficient.
+    """
+    model = get_lot_model()
+    permission_required = 'lots.add_lot'
+
+    def get_success_message(self, lot):
+        return 'Successfully removed %s from this group. ' % lot
+
+    def post(self, request, *args, **kwargs):
+        lot = self.get_object()
+        group = lot.group
+        group.remove(lot)
+        context = {
+            'lot': lot.pk,
+            'former_group': group.pk,
+        }
+        messages.success(request, self.get_success_message(lot))
+        return self.render_json_response(context)
+
+
 #
 # Hide
 #

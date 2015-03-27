@@ -4,7 +4,8 @@ from .views import (AddToGroupView, CheckLotWithParcelExistsView,
                     CreateLotByGeomView, HideLotView, HideLotSuccessView,
                     LotDetailView, LotGeoJSONDetailView, LotsGeoJSON,
                     LotsGeoJSONPolygon, LotsGeoJSONCentroid, LotsCountView,
-                    LotsCountBoundaryView, LotsCSV, LotsKML)
+                    LotsCountBoundaryView, LotsCSV, LotsKML,
+                    RemoveFromGroupView)
 
 
 urlpatterns = patterns('',
@@ -38,4 +39,6 @@ urlpatterns = patterns('',
 
     url(r'^(?P<pk>\d+)/group/add/$', AddToGroupView.as_view(),
         name='add_to_group'),
+    url(r'^(?P<pk>\d+)/group/remove/$', RemoveFromGroupView.as_view(),
+        name='remove_from_group'),
 )
