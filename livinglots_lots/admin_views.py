@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.views.generic import FormView
 
-from autocomplete_light import ChoiceWidget
+from autocomplete_light.widgets import ChoiceWidget
 from braces.views import LoginRequiredMixin, PermissionRequiredMixin
 from livinglots import get_lot_model, get_lotgroup_model
 

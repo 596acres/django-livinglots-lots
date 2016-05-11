@@ -1,5 +1,6 @@
-from autocomplete_light import (AutocompleteGenericBase, AutocompleteModelBase,
-                                register)
+from autocomplete_light.registry import register
+from autocomplete_light.shortcuts import (AutocompleteGenericBase,
+                                          AutocompleteModelBase)
 
 from livinglots import get_lot_model, get_lotgroup_model
 
