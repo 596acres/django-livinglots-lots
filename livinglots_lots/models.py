@@ -171,7 +171,7 @@ class BaseLot(Place):
             verbose_name=_('owner contact'),
         )
 
-    known_use = models.ForeignKey('Use',
+    known_use = models.ForeignKey('livinglots_lots.Use',
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
