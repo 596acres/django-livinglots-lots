@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from .views import (AddToGroupView, CheckLotWithParcelExistsView,
                     CreateLotByGeomView, HideLotView, HideLotSuccessView,
@@ -8,7 +8,7 @@ from .views import (AddToGroupView, CheckLotWithParcelExistsView,
                     RemoveFromGroupView)
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^csv/', LotsCSV.as_view(), name='csv'),
     url(r'^geojson/', LotsGeoJSON.as_view(), name='geojson'),
     url(r'^kml/', LotsKML.as_view(), name='kml'),
@@ -41,4 +41,4 @@ urlpatterns = patterns('',
         name='add_to_group'),
     url(r'^(?P<pk>\d+)/group/remove/$', RemoveFromGroupView.as_view(),
         name='remove_from_group'),
-)
+]

@@ -1,8 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from .views import LotsMap
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^', LotsMap.as_view()),
-)
+]

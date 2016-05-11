@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
@@ -62,10 +62,10 @@ class BaseLotAdmin(GeoAdmin):
         prefix = "%s_%s" % (app_label, object_name)
 
         urls = super(BaseLotAdmin, self).get_urls()
-        my_urls = patterns('',
+        my_urls = [
             url(r'^add-to-group/', AddToGroupView.as_view(),
                 name='%s_add_to_group' % prefix),
-        )
+        ]
         return my_urls + urls
 
     def stewards_list(self, obj):
