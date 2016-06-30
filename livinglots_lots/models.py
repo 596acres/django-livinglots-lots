@@ -90,7 +90,7 @@ class BaseLotManager(PlaceManager):
         return lot
 
     def create_lot_for_geom(self, geom, **lot_kwargs):
-        kwargs = self.get_lot_kwargs_by_geom(MultiPolygon(geom))
+        kwargs = self.get_lot_kwargs_by_geom(geom, **lot_kwargs)
         kwargs.update(**lot_kwargs)
         lot = get_lot_model()(**kwargs)
         lot.save()
