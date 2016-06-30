@@ -2,4 +2,4 @@ Django>=1.5.1
 django-braces==1.0.0
 git+git://github.com/ebrelsford/django-inplace/@1e7eb79fa18
 git+git://github.com/596acres/django-livinglots/@412a5d23606
-git+git://github.com/596acres/django-livinglots-genericviews/@07f78f2f
+django-livinglots-genericviews==1.4.2

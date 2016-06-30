@@ -20,7 +20,7 @@ from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
 from livinglots import get_lot_model
-from livinglots_genericviews import CSVView, JSONResponseView
+from livinglots_genericviews.views import CSVView, JSONResponseView
 
 from .exceptions import ParcelAlreadyInLot
 from .forms import HideLotForm
