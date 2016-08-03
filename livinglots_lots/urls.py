@@ -1,11 +1,11 @@
 from django.conf.urls import url
 
 from .views import (AddToGroupView, CheckLotWithParcelExistsView,
-                    CreateLotByGeomView, HideLotView, HideLotSuccessView,
-                    LotDetailView, LotGeoJSONDetailView, LotsGeoJSON,
-                    LotsGeoJSONPolygon, LotsGeoJSONCentroid, LotsCountView,
-                    LotsCountBoundaryView, LotsCSV, LotsKML,
-                    RemoveFromGroupView)
+                    CountWatchersView, CreateLotByGeomView, EmailWatchersView,
+                    HideLotView, HideLotSuccessView, LotDetailView,
+                    LotGeoJSONDetailView, LotsGeoJSON, LotsGeoJSONPolygon,
+                    LotsGeoJSONCentroid, LotsCountView, LotsCountBoundaryView,
+                    LotsCSV, LotsKML, RemoveFromGroupView)
 
 
 urlpatterns = [
@@ -41,4 +41,9 @@ urlpatterns = [
         name='add_to_group'),
     url(r'^(?P<pk>\d+)/group/remove/$', RemoveFromGroupView.as_view(),
         name='remove_from_group'),
+
+    url(r'^organize/watchers/email/', EmailWatchersView.as_view(),
+        name='lot_email_watchers'),
+    url(r'^organize/watchers/count/', CountWatchersView.as_view(),
+        name='lot_count_watchers'),
 ]

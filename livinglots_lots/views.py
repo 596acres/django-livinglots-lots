@@ -19,8 +19,9 @@ from braces.views import (CsrfExemptMixin, JSONResponseMixin, LoginRequiredMixin
 from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
-from livinglots import get_lot_model
+from livinglots import get_lot_model, get_watcher_model
 from livinglots_genericviews.views import CSVView, JSONResponseView
+from livinglots_organize.mail import mass_mail_watchers
 
 from .exceptions import ParcelAlreadyInLot
 from .forms import HideLotForm
@@ -496,3 +497,52 @@ class HideLotView(LotContextMixin, PermissionRequiredMixin, FormView):
         lot.known_use_locked = True
         lot.save()
         return super(HideLotView, self).form_valid(form)
+
+
+#
+# Email watchers views
+#
+
+class LotWatchersMixin(FilteredLotsMixin):
+
+    def get_watchers(self):
+        lots = self.get_lots().qs.values_list('pk', flat=True)
+        return get_watcher_model().objects.filter(
+            content_type=ContentType.objects.get_for_model(get_lot_model()),
+            object_id__in=lots,
+        )
+
+
+class CountWatchersView(LoginRequiredMixin, PermissionRequiredMixin,
+                        JSONResponseMixin, LotWatchersMixin, View):
+    permission_required = 'lots.add_lot'
+
+    def get(self, request, *args, **kwargs):
+        watchers = self.get_watchers()
+        context = {
+            'emails': len(set(watchers.values_list('email', flat=True))),
+            'watchers': watchers.count(),
+        }
+        return self.render_json_response(context)
+
+
+class EmailWatchersView(LoginRequiredMixin, PermissionRequiredMixin,
+                        JSONResponseMixin, LotWatchersMixin, View):
+    permission_required = 'organize.email_watcher'
+
+    def get(self, request, *args, **kwargs):
+        watchers = self.get_watchers().exclude(email=None).exclude(email='')
+        subject = request.GET.get('subject')
+        text = request.GET.get('text')
+        emails = set(watchers.values_list('email', flat=True))
+        if not (subject and text and emails):
+            return HttpResponseBadRequest('All parameters are required')
+        context = {
+            'emails': len(emails),
+            'watchers': len(watchers),
+            'subject': subject,
+            'text': text,
+        }
+
+        mass_mail_watchers(subject, text, watchers)
+        return self.render_json_response(context)
