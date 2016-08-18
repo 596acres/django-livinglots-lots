@@ -200,6 +200,12 @@ class BaseLot(Place):
         help_text=('The original reason this lot was added'),
     )
 
+    updated = models.DateTimeField(_('date updated'),
+        auto_now=True,
+        help_text=('When this lot was last updated'),
+        null=True,
+    )
+
     steward_inclusion_opt_in = models.BooleanField(_('steward inclusion opt-in'),
         default=False,
         help_text=_('Did the steward opt in to being included on our map?'),
