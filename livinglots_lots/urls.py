@@ -1,11 +1,14 @@
 from django.conf.urls import url
 
+from livinglots import get_organizer_model, get_watcher_model
+
 from .views import (AddToGroupView, CheckLotWithParcelExistsView,
-                    CountWatchersView, CreateLotByGeomView, EmailWatchersView,
-                    HideLotView, HideLotSuccessView, LotDetailView,
-                    LotGeoJSONDetailView, LotsGeoJSON, LotsGeoJSONPolygon,
-                    LotsGeoJSONCentroid, LotsCountView, LotsCountBoundaryView,
-                    LotsCSV, LotsKML, RemoveFromGroupView)
+                    CountParticipantsView, CreateLotByGeomView,
+                    EmailParticipantsView, HideLotView, HideLotSuccessView,
+                    LotDetailView, LotGeoJSONDetailView, LotsGeoJSON,
+                    LotsGeoJSONPolygon, LotsGeoJSONCentroid, LotsCountView,
+                    LotsCountBoundaryView, LotsCSV, LotsKML,
+                    RemoveFromGroupView)
 
 
 urlpatterns = [
@@ -42,8 +45,29 @@ urlpatterns = [
     url(r'^(?P<pk>\d+)/group/remove/$', RemoveFromGroupView.as_view(),
         name='remove_from_group'),
 
-    url(r'^organize/watchers/email/', EmailWatchersView.as_view(),
+    url(r'^organize/organizers/email/', EmailParticipantsView.as_view(
+            model=get_organizer_model(),
+            participant_type='organizer',
+            permission_required='organize.email_organizer',
+        ),
+        name='lot_email_organizers'),
+    url(r'^organize/organizers/count/', CountParticipantsView.as_view(
+            model=get_organizer_model(),
+            participant_type='organizer',
+            permission_required='organize.email_organizer',
+        ),
+        name='lot_count_organizers'),
+
+    url(r'^organize/watchers/email/', EmailParticipantsView.as_view(
+            model=get_watcher_model(),
+            participant_type='watcher',
+            permission_required='organize.email_watcher',
+        ),
         name='lot_email_watchers'),
-    url(r'^organize/watchers/count/', CountWatchersView.as_view(),
+    url(r'^organize/watchers/count/', CountParticipantsView.as_view(
+            model=get_watcher_model(),
+            participant_type='watcher',
+            permission_required='organize.email_watcher',
+        ),
         name='lot_count_watchers'),
 ]

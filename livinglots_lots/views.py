@@ -19,9 +19,9 @@ from braces.views import (CsrfExemptMixin, JSONResponseMixin, LoginRequiredMixin
 from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
-from livinglots import get_lot_model, get_watcher_model
+from livinglots import get_lot_model
 from livinglots_genericviews.views import CSVView, JSONResponseView
-from livinglots_organize.mail import mass_mail_watchers
+from livinglots_organize.mail import mass_mail_organizers, mass_mail_watchers
 
 from .exceptions import ParcelAlreadyInLot
 from .forms import HideLotForm
@@ -500,49 +500,54 @@ class HideLotView(LotContextMixin, PermissionRequiredMixin, FormView):
 
 
 #
-# Email watchers views
+# Email organizers views
 #
 
-class LotWatchersMixin(FilteredLotsMixin):
+class LotParticipantsMixin(FilteredLotsMixin):
+    model = None
+    participant_type = None
 
-    def get_watchers(self):
+    def get_participants(self):
         lots = self.get_lots().qs.values_list('pk', flat=True)
-        return get_watcher_model().objects.filter(
+        return self.model.objects.filter(
             content_type=ContentType.objects.get_for_model(get_lot_model()),
             object_id__in=lots,
         )
 
 
-class CountWatchersView(LoginRequiredMixin, PermissionRequiredMixin,
-                        JSONResponseMixin, LotWatchersMixin, View):
-    permission_required = 'lots.add_lot'
+class CountParticipantsView(LoginRequiredMixin, PermissionRequiredMixin,
+        JSONResponseMixin, LotParticipantsMixin, View):
 
     def get(self, request, *args, **kwargs):
-        watchers = self.get_watchers()
+        participants = self.get_participants()
         context = {
-            'emails': len(set(watchers.values_list('email', flat=True))),
-            'watchers': watchers.count(),
+            'emails': len(set(participants.values_list('email', flat=True))),
+            'participants': participants.count(),
         }
+        context['%ss' % self.model.__name__.lower()] = participants.count()
         return self.render_json_response(context)
 
 
-class EmailWatchersView(LoginRequiredMixin, PermissionRequiredMixin,
-                        JSONResponseMixin, LotWatchersMixin, View):
-    permission_required = 'organize.email_watcher'
+class EmailParticipantsView(LoginRequiredMixin, PermissionRequiredMixin,
+        JSONResponseMixin, LotParticipantsMixin, View):
 
     def get(self, request, *args, **kwargs):
-        watchers = self.get_watchers().exclude(email=None).exclude(email='')
+        participants = self.get_participants().exclude(email=None).exclude(email='')
         subject = request.GET.get('subject')
         text = request.GET.get('text')
-        emails = set(watchers.values_list('email', flat=True))
+        emails = set(participants.values_list('email', flat=True))
         if not (subject and text and emails):
             return HttpResponseBadRequest('All parameters are required')
         context = {
             'emails': len(emails),
-            'watchers': len(watchers),
+            'participants': len(participants),
             'subject': subject,
             'text': text,
         }
+        context['%ss' % self.model.__name__.lower()] = participants.count()
 
-        mass_mail_watchers(subject, text, watchers)
+        if self.participant_type == 'organizer':
+            mass_mail_organizers(subject, text, participants)
+        if self.participant_type == 'watcher':
+            mass_mail_watchers(subject, text, participants)
         return self.render_json_response(context)
