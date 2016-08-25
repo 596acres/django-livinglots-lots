@@ -104,6 +104,8 @@ class BaseLotManager(PlaceManager):
             if feature_geom.geom_type not in ('Polygon', 'MultiPolygon'):
                 raise ValueError('Only Polygon or MultiPolygon geometries are '
                                  'permitted when creating lots')
+            if feature_geom.geom_type == 'Polygon':
+                feature_geom = MultiPolygon(feature_geom)
             lots.append(self.create_lot_for_geom(feature_geom, **lot_kwargs))
         if len(lots) > 1:
             kwargs = self.get_lotgroup_kwargs(lots, **lot_kwargs)
