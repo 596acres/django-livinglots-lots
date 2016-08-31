@@ -551,3 +551,58 @@ class EmailParticipantsView(LoginRequiredMixin, PermissionRequiredMixin,
         if self.participant_type == 'watcher':
             mass_mail_watchers(subject, text, participants)
         return self.render_json_response(context)
+
+
+class LotContentJSON(JSONResponseMixin, LotDetailView):
+
+    def get_files(self, lot):
+        def _dict(file):
+            return {
+                'added': file.added,
+                'added_by_name': file.added_by_name,
+                'description': file.description,
+                'id': file.pk,
+                'title': file.title,
+                'type': 'file',
+                'url': self.request.build_absolute_uri(file.document.url),
+            }
+        return [_dict(f) for f in lot.files.all()]
+
+    def get_notes(self, lot):
+        def _dict(note):
+            return {
+                'added': note.added,
+                'added_by_name': note.added_by_name,
+                'id': note.pk,
+                'text': note.text,
+                'type': 'note',
+            }
+        return [_dict(n) for n in lot.notes.all()]
+
+    def get_photos(self, lot):
+        def _dict(photo):
+            return {
+                'added': photo.added,
+                'added_by_name': photo.added_by_name,
+                'description': photo.description,
+                'id': photo.pk,
+                'name': photo.name,
+                'type': 'photo',
+                'url': self.request.build_absolute_uri(photo.thumbnail.url),
+            }
+        return [_dict(p) for p in lot.photos.all()]
+
+    def get_usercontent(self, lot):
+        usercontent = self.get_files(lot) + self.get_notes(lot) + self.get_photos(lot)
+        usercontent = sorted(usercontent, key=lambda c: c['added'])
+        usercontent.reverse()
+        return usercontent
+
+    def get(self, request, *args, **kwargs):
+        lot = self.object = self.get_object()
+
+        context = {
+            'usercontent': self.get_usercontent(lot),
+        }
+
+        return self.render_json_response(context)

@@ -387,6 +387,10 @@ class BaseLot(Place):
         """Override inplace url"""
         return ('lots:lot_detail_geojson', (), { 'pk': self.pk })
 
+    @models.permalink
+    def get_usercontent_url(self):
+        return ('lots:lot_content_json', (), { 'pk': self.pk })
+
     @classmethod
     def get_filter(cls):
         """

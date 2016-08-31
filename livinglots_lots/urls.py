@@ -5,9 +5,9 @@ from livinglots import get_organizer_model, get_watcher_model
 from .views import (AddToGroupView, CheckLotWithParcelExistsView,
                     CountParticipantsView, CreateLotByGeomView,
                     EmailParticipantsView, HideLotView, HideLotSuccessView,
-                    LotDetailView, LotGeoJSONDetailView, LotsGeoJSON,
-                    LotsGeoJSONPolygon, LotsGeoJSONCentroid, LotsCountView,
-                    LotsCountBoundaryView, LotsCSV, LotsKML,
+                    LotContentJSON, LotDetailView, LotGeoJSONDetailView,
+                    LotsGeoJSON, LotsGeoJSONPolygon, LotsGeoJSONCentroid,
+                    LotsCountView, LotsCountBoundaryView, LotsCSV, LotsKML,
                     RemoveFromGroupView)
 
 
@@ -70,4 +70,7 @@ urlpatterns = [
             permission_required='organize.email_watcher',
         ),
         name='lot_count_watchers'),
+
+    url(r'^(?P<pk>\d+)/content/json/$', LotContentJSON.as_view(),
+        name='lot_content_json'),
 ]
