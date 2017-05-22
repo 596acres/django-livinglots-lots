@@ -58,21 +58,33 @@ class BaseLotManager(PlaceManager):
         kwargs.update(**defaults)
         return kwargs
 
-    def create_lot_for_parcel(self, parcel, **lot_kwargs):
+    def create_lot_for_parcel(self, parcel, allow_overlap=True, **lot_kwargs):
+        lot_model = get_lot_model()
+
         # Check parcel validity
         if parcel.lot_set.count():
             raise ParcelAlreadyInLot('Parcel %d is already part of a lot' % parcel.pk)
+        if not allow_overlap:
+            # Find existing lots that overlap with parcel and raise exception
+            overlaps = False
+            try:
+                overlaps = lot_model.objects.filter(polygon__overlaps=parcel.geom).exists()
+            except Exception:
+                # NB: This happens (rarely) with invalid geometries
+                print 'Exception while checking overlaps'
+            if overlaps:
+                raise ParcelAlreadyInLot('Parcel %d is already part of a lot, overlapping' % parcel.pk)
 
-        lot = get_lot_model()(**self.get_lot_kwargs(parcel, **lot_kwargs))
+        lot = lot_model(**self.get_lot_kwargs(parcel, **lot_kwargs))
         lot.save()
         return lot
 
-    def create_lot_for_parcels(self, parcels, **lot_kwargs):
+    def create_lot_for_parcels(self, parcels, allow_overlap=True, **lot_kwargs):
         lots = []
 
         # Create lots for each parcel
         for parcel in parcels:
-            lots.append(self.create_lot_for_parcel(parcel, **lot_kwargs))
+            lots.append(self.create_lot_for_parcel(parcel, allow_overlap=allow_overlap, **lot_kwargs))
 
         # Multiple lots, create a lot group
         if len(lots) > 1:
