@@ -5,10 +5,10 @@ from livinglots import get_organizer_model, get_watcher_model
 from .views import (AddToGroupView, CheckLotWithParcelExistsView,
                     CountParticipantsView, CreateLotByGeomView,
                     EmailParticipantsView, HideLotView, HideLotSuccessView,
-                    LotContentJSON, LotDetailView, LotGeoJSONDetailView,
-                    LotsGeoJSON, LotsGeoJSONPolygon, LotsGeoJSONCentroid,
-                    LotsCountView, LotsCountBoundaryView, LotsCSV, LotsKML,
-                    RemoveFromGroupView)
+                    LotAutocomplete, LotContentJSON, LotDetailView,
+                    LotGeoJSONDetailView, LotGroupAutocomplete, LotsGeoJSON,
+                    LotsGeoJSONPolygon, LotsGeoJSONCentroid, LotsCountView,
+                    LotsCountBoundaryView, LotsCSV, LotsKML, RemoveFromGroupView)
 
 
 urlpatterns = [
@@ -73,4 +73,16 @@ urlpatterns = [
 
     url(r'^(?P<pk>\d+)/content/json/$', LotContentJSON.as_view(),
         name='lot_content_json'),
+
+    url(
+        r'^lot-autocomplete/$',
+        LotAutocomplete.as_view(),
+        name='lot-autocomplete'
+    ),
+
+    url(
+        r'^lotgroup-autocomplete/$',
+        LotGroupAutocomplete.as_view(create_field='name'),
+        name='lotgroup-autocomplete'
+    ),
 ]

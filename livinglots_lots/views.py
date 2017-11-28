@@ -14,12 +14,13 @@ from django.views.generic.base import ContextMixin
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
 
+from dal import autocomplete
 from braces.views import (CsrfExemptMixin, JSONResponseMixin, LoginRequiredMixin,
                           PermissionRequiredMixin)
 from inplace.boundaries.models import Boundary
 from inplace.views import (GeoJSONListView, GeoJSONResponseMixin, KMLView,
                            PlacesDetailView)
-from livinglots import get_lot_model
+from livinglots import get_lot_model, get_lotgroup_model
 from livinglots_genericviews.views import CSVView, JSONResponseView
 from livinglots_organize.mail import mass_mail_organizers, mass_mail_watchers
 
@@ -606,3 +607,32 @@ class LotContentJSON(JSONResponseMixin, LotDetailView):
         }
 
         return self.render_json_response(context)
+
+
+#
+# Autocomplete
+#
+class LotAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated():
+            return get_lot_model().objects.none()
+
+        qs = get_lot_model().objects.all()
+        if self.q:
+            qs = qs.filter(name__istartswith=self.q)
+        qs.order_by('name')
+
+        return qs
+
+
+class LotGroupAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated():
+            return get_lotgroup_model().objects.none()
+
+        qs = get_lotgroup_model().objects.all()
+        if self.q:
+            qs = qs.filter(name__istartswith=self.q)
+        qs.order_by('name')
+
+        return qs
