@@ -2,13 +2,6 @@
 {% load i18n admin_static admin_modify static %}
 {% load admin_urls %}
 
-{% block extrahead %}
-{{ block.super }}
-<script src="{% static "admin/js/jquery.min.js" %}"></script>
-<script src="{% static "admin/js/jquery.init.js" %}"></script>
-<script src="{% static "admin/js/admin/RelatedObjectLookups.js" %}"></script>
-{% endblock %}
-
 {% block bodyclass %}change-list{% endblock %}
 
 {% block breadcrumbs %}
